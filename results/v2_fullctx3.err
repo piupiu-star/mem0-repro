@@ -1,0 +1,3 @@
+refusing to evaluate conv 0: the store reports 0 memories.
+Run 'fullctx' with --stage all (or ingest first). Scoring an empty
+store produces numbers that look like a finding but are an artefact.
