@@ -125,7 +125,7 @@ Each of these is a controlled, documented departure — not an accident.
 |---|---|---|---|
 | 1 | Mem0 served over HTTP via `docker compose` (FastAPI + Qdrant) | `mem0.Memory.from_config` called directly | machine has no Docker; the SDK is the same code |
 | 2 | `--answerer-model` default `gpt-5`, provider `openai` | `deepseek-chat` via `https://api.deepseek.com` | repo targets a paid/closed model; the brief explicitly permits substitution under Edge case A |
-| 3 | `--judge-model` default `gpt-5` | `deepseek-chat` | **this changes the metric, not just the answerer**: the judge *is* the measuring instrument. The judge prompt text is byte-identical; the grader is not. See `REPORT.md` §2 |
+| 3 | `--judge-model` default `gpt-5` | `deepseek-chat` | **this changes the metric, not just the answerer**: the judge *is* the measuring instrument. The judge prompt text is byte-identical; the grader is not. See the report, §2 |
 | 4 | `text-embedding-3-small` | local `fastembed bge-small-en-v1.5` (384 dims) | DeepSeek exposes **no** embeddings endpoint, so this swap is forced rather than chosen |
 | 5 | `benchmarks/locomo/run.py` (the authors' script) | `src/run.py`, a re-implementation of the same loop | the official entry point requires the Docker service (#1). Prompts and `preprocess_answer` are byte-identical copies and the memory-rendering glue was diffed against `get_answer_prompt`; that diff is the evidence of fidelity |
 | 6 | cutoffs `10,20,50,200` | `10,200` | budget; the endpoint of the trade-off curve is what R2 needs |
@@ -166,8 +166,9 @@ float nondeterminism, MoE routing), which is why 3 trials are run rather than 1.
 
 ## 5. Results
 
-**The report is [`REPORT.md`](REPORT.md).** Everything in it is generated here,
-not typed by hand.
+**The report is
+[`FTEC5660_Individual_Project2_1155267871_PIAO_Xiuling.pdf`](FTEC5660_Individual_Project2_1155267871_PIAO_Xiuling.pdf).**
+Everything in it is generated here, not typed by hand.
 
 `python -m src.summarize` writes:
 
@@ -205,7 +206,7 @@ The modification (`infer=False`) raises overall accuracy to **77.5 %**
 (+12.2 pp; paired McNemar p < 0.001, 95 % CI [+8.3, +16.4] pooled over three
 trials, and +12.5 / +12.5 / +11.7 per trial). 35 of the 44 extra correct answers
 are temporal; open-domain moves by one question the wrong way (38/39 → 37/39),
-which is noise at that n. See `REPORT.md` §5.
+which is noise at that n. See the report (§5).
 
 ---
 
@@ -232,8 +233,8 @@ section 6, and each one is a generalisable lesson.
 | 3 | `Failed to load spaCy lemma model: spaCy is not installed` | the plain `mem0ai` wheel silently degrades v3's multi-signal retrieval to dense-only | install `mem0ai[nlp]` + `python -m spacy download en_core_web_sm`; documented as **required** |
 | 4 | no Docker on this machine, official OSS eval path is `docker compose`-only | official harness wraps Mem0 in a FastAPI service | drive the SDK directly (deviation #1 above) |
 | 5 | DeepSeek exposes no `/embeddings` endpoint | model substitution cannot be a single variable | embedder replaced by local `fastembed`; recorded as a **forced** confounding variable |
-| 6 | Temporal accuracy collapsed to **2/20 (10%)** while multi-hop scored 14/15 | the official runner passes `timestamp=<session epoch>` to `add()`, but `mem0ai==2.2.1` **refuses** it — `ValueError: The timestamp parameter is not supported by the OSS Memory SDK.`, gated in `mem0/memory/notices.py` (same for `reference_date`). My adapter catches the refusal and retries without it, so ingestion succeeds and every relative expression is then resolved against the **wall clock**: a 2023 conversation gets stored as "November 2026" evidence | **not patched** — reported as the main finding. It is a platform-only feature gate, and the `infer=False` ablation in `REPORT.md` §5 exists to measure its damage |
-| 7 | ingest log printed `stored=20` for a 419-turn conversation | `Memory.get_all()` defaults to **`top_k=20`**, so any bare call truncates to 20 and reports a fabricated total. The store behind that log held several hundred memories (503 in the run behind the reported numbers — see `REPORT.md` §5) | pass `top_k=100_000`; count is cross-checked against `QdrantClient.count(exact=True)` |
+| 6 | Temporal accuracy collapsed to **2/20 (10%)** while multi-hop scored 14/15 | the official runner passes `timestamp=<session epoch>` to `add()`, but `mem0ai==2.2.1` **refuses** it — `ValueError: The timestamp parameter is not supported by the OSS Memory SDK.`, gated in `mem0/memory/notices.py` (same for `reference_date`). My adapter catches the refusal and retries without it, so ingestion succeeds and every relative expression is then resolved against the **wall clock**: a 2023 conversation gets stored as "November 2026" evidence | **not patched** — reported as the main finding. It is a platform-only feature gate, and the `infer=False` ablation in the report (§5) exists to measure its damage |
+| 7 | ingest log printed `stored=20` for a 419-turn conversation | `Memory.get_all()` defaults to **`top_k=20`**, so any bare call truncates to 20 and reports a fabricated total. The store behind that log held several hundred memories (503 in the run behind the reported numbers — see the report, §5) | pass `top_k=100_000`; count is cross-checked against `QdrantClient.count(exact=True)` |
 | 8 | first run exited with code 1 although every artefact was written | PostHog/Qdrant shutdown noise on the stderr stream; PowerShell promotes stderr output to a terminating error | run with `*> results/runN.log` and judge success by artefact count, not by exit code |
 | 9 | every retrieved memory was prefixed `(2026-11-12)` where the authors' pipeline renders `(Thursday, November 12, 2026)` | my `_human_date` carried a shortened `strptime` format tuple. mem0 writes `created_at` as `2026-11-12T15:31:07.809868+00:00`, which matches the authors' second candidate `%Y-%m-%dT%H:%M:%S.%f%z` only after the `[:26]` truncation *and* `%z` removal; mine skipped that candidate and fell through to the bare `YYYY-MM-DD` fallback | copied `_to_human_date` verbatim, verified byte-identical output on 8 input shapes, and archived (not patched) every answer produced under the old prefix to `results/_archive_v1_datefmt/` |
 

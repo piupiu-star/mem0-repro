@@ -25,3 +25,9 @@ results/*.log
 # local junk
 ~$*
 slides/*.docx
+
+# report working copies; the delivered file is the PDF above
+REPORT.md
+REPORT.tex
+REPORT.docx
+REPORT_before_format.docx
