@@ -1,0 +1,16 @@
+# Pin the resolved versions in the report. After installing, run:
+#   pip freeze > results/pip-freeze.txt
+#
+# [nlp] is REQUIRED, not optional: mem0 v3 advertises "multi-signal retrieval
+# (semantic + BM25 + entity matching)". Without the extra it silently degrades
+# to dense-only retrieval and logs
+#   "Failed to load spaCy lemma model: spaCy is not installed"
+# which would make our numbers non-comparable to the reported ones.
+mem0ai[nlp]
+fastembed
+qdrant-client
+openai>=1.50.0
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+
+# then:  python -m spacy download en_core_web_sm

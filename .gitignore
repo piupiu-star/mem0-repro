@@ -1,0 +1,27 @@
+# secrets
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# data + artefacts that are too large for git
+datasets/
+results/vectorstore/
+results/_archive_*/
+results/*/conv*_q*_t*.json
+results/*/run_t*.json
+results/*/cost_t*.json
+results/*/ingest_conv*.json
+results/*.log
+
+# keep these tracked:
+#   results/runs.csv          one row per (config, trial, question, cutoff)
+#   results/summary.md        every published number
+#   results/pip-freeze.txt    resolved dependency versions
+#   results/evidence/         curated raw excerpts (e.g. the temporal smoking gun)
+
+# local junk
+~$*
+slides/*.docx
